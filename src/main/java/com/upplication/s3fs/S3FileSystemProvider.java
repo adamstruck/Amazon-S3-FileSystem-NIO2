@@ -155,9 +155,11 @@ public class S3FileSystemProvider extends FileSystemProvider {
             }
             return authority + "@" + host;
         } else {
-            String accessKey = (String) props.get(ACCESS_KEY);
-            return (accessKey != null ? accessKey + "@" : "") +
-                    (uri.getHost() != null ? uri.getHost() : Constants.S3_HOSTNAME);
+            String key = uri.getHost() != null ? uri.getHost() : Constants.S3_HOSTNAME;
+            if (uri.getPort() != -1) {
+              key += ":" + uri.getPort();
+            }
+            return key;
         }
     }
 
@@ -550,7 +552,11 @@ public class S3FileSystemProvider extends FileSystemProvider {
      * @return S3FileSystem never null
      */
     public S3FileSystem createFileSystem(URI uri, Properties props) {
-        return new S3FileSystem(this, getFileSystemKey(uri, props), getAmazonS3(uri, props), uri.getHost());
+        String endpoint = uri.getHost();
+        if (uri.getPort() != -1) {
+          endpoint += ":" + uri.getPort();
+        }
+        return new S3FileSystem(this, getFileSystemKey(uri, props), getAmazonS3(uri, props), endpoint);
     }
 
     protected AmazonS3 getAmazonS3(URI uri, Properties props) {
